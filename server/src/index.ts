@@ -75,6 +75,16 @@ async function initDB() {
 
 // WebSocket connections
 const clients = new Map();
+const activeCalls = new Map();
+
+interface CallData {
+  id: string;
+  chatId: string;
+  callerId: string;
+  calleeId: string;
+  type: 'audio' | 'video';
+  status: 'calling' | 'ringing' | 'accepted' | 'ended';
+}
 
 wss.on('connection', async (ws, req) => {
   const url = new URL(req.url || '', `http://${req.headers.host}`);
@@ -92,6 +102,12 @@ wss.on('connection', async (ws, req) => {
 
     ws.on('close', () => {
       clients.delete(decoded.userId);
+      // End any active calls
+      activeCalls.forEach((call, callId) => {
+        if (call.callerId === decoded.userId || call.calleeId === decoded.userId) {
+          handleEndCall(callId, decoded.userId);
+        }
+      });
       console.log(`User ${decoded.userId} disconnected`);
     });
 
@@ -116,6 +132,149 @@ function handleWebSocketMessage(userId: string, message: any, ws: any) {
     case 'typing':
       handleTyping(userId, message);
       break;
+    case 'call':
+      handleCall(userId, message);
+      break;
+    case 'call-answer':
+      handleCallAnswer(userId, message);
+      break;
+    case 'call-reject':
+      handleCallReject(userId, message);
+      break;
+    case 'call-end':
+      handleCallEnd(userId, message);
+      break;
+    case 'ice-candidate':
+      handleIceCandidate(userId, message);
+      break;
+  }
+}
+
+function handleCall(callerId: string, message: any) {
+  const { chatId, calleeId, callType } = message;
+  const callId = `call-${Date.now()}`;
+  
+  const callData: CallData = {
+    id: callId,
+    chatId,
+    callerId,
+    calleeId,
+    type: callType,
+    status: 'calling'
+  };
+  
+  activeCalls.set(callId, callData);
+  
+  const callerClient = clients.get(callerId);
+  const calleeClient = clients.get(calleeId);
+  
+  // Notify caller
+  if (callerClient) {
+    callerClient.send(JSON.stringify({
+      type: 'call',
+      callId,
+      status: 'calling',
+      callType
+    }));
+  }
+  
+  // Notify callee
+  if (calleeClient) {
+    calleeClient.send(JSON.stringify({
+      type: 'call',
+      callId,
+      callerId,
+      callType,
+      status: 'ringing'
+    }));
+  }
+}
+
+function handleCallAnswer(answererId: string, message: any) {
+  const { callId, accepted } = message;
+  const callData = activeCalls.get(callId);
+  
+  if (!callData) return;
+  
+  const callerClient = clients.get(callData.callerId);
+  const answererClient = clients.get(answererId);
+  
+  if (accepted) {
+    callData.status = 'accepted';
+    
+    if (callerClient) {
+      callerClient.send(JSON.stringify({
+        type: 'call',
+        callId,
+        status: 'accepted',
+        callType: callData.type
+      }));
+    }
+    
+    if (answererClient) {
+      answererClient.send(JSON.stringify({
+        type: 'call',
+        callId,
+        status: 'accepted',
+        callType: callData.type
+      }));
+    }
+  }
+}
+
+function handleCallReject(rejecterId: string, message: any) {
+  const { callId } = message;
+  const callData = activeCalls.get(callId);
+  
+  if (!callData) return;
+  
+  const callerClient = clients.get(callData.callerId);
+  
+  if (callerClient) {
+    callerClient.send(JSON.stringify({
+      type: 'call-rejected',
+      callId,
+      rejectedBy: rejecterId
+    }));
+  }
+  
+  activeCalls.delete(callId);
+}
+
+function handleCallEnd(enderId: string, message: any) {
+  const { callId } = message;
+  handleEndCall(callId, enderId);
+}
+
+function handleEndCall(callId: string, enderId: string) {
+  const callData = activeCalls.get(callId);
+  
+  if (!callData) return;
+  
+  const otherUserId = callData.callerId === enderId ? callData.calleeId : callData.callerId;
+  const otherClient = clients.get(otherUserId);
+  
+  if (otherClient) {
+    otherClient.send(JSON.stringify({
+      type: 'call-ended',
+      callId
+    }));
+  }
+  
+  activeCalls.delete(callId);
+}
+
+function handleIceCandidate(senderId: string, message: any) {
+  const { callId, candidate, targetUserId } = message;
+  const targetClient = clients.get(targetUserId);
+  
+  if (targetClient) {
+    targetClient.send(JSON.stringify({
+      type: 'ice-candidate',
+      callId,
+      candidate,
+      fromUserId: senderId
+    }));
   }
 }
 
