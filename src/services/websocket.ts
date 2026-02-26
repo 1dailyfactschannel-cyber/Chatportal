@@ -10,8 +10,10 @@ export const connectWebSocket = () => {
 
   if (ws?.readyState === WebSocket.OPEN) return;
 
+  const wsUrl = `ws://${window.location.host}/ws?token=${token}`;
+
   try {
-    ws = new WebSocket(`ws://89.208.14.253:3001/ws?token=${token}`);
+    ws = new WebSocket(wsUrl);
 
     ws.onopen = () => {
       console.log('WebSocket connected');
