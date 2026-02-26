@@ -3,21 +3,11 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
+# Copy all files first
+COPY . .
 
-# Install dependencies
-RUN npm ci
-
-# Copy source files
-COPY index.html ./
-COPY src ./src
-COPY vite.config.ts ./
-COPY tailwind.config.js ./
-COPY postcss.config.js ./
-
-# Build the React app
-RUN npm run build
+# Install dependencies and build
+RUN npm ci && npm run build
 
 # Production stage
 FROM nginx:alpine
