@@ -2,11 +2,14 @@
   "name": "chatportal",
   "version": "1.0.0",
   "description": "Messenger Desktop App",
-  "type": "module",
+  "main": "electron/main.js",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
+    "electron": "electron .",
+    "electron:dev": "NODE_ENV=development electron .",
+    "electron:build": "vite build && electron-builder --win --x64",
     "tauri": "tauri"
   },
   "repository": {
@@ -34,8 +37,24 @@
     "@types/react": "^18.3.0",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^5.1.4",
+    "electron": "^40.6.1",
+    "electron-builder": "^26.8.1",
     "tailwindcss": "^3.4.19",
     "typescript": "^5.9.3",
     "vite": "^7.3.1"
+  },
+  "build": {
+    "appId": "com.messenger.app",
+    "productName": "Messenger",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*"
+    ],
+    "win": {
+      "target": "portable"
+    }
   }
 }
