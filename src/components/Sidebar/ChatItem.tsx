@@ -1,4 +1,3 @@
-import { Avatar } from '../common/Avatar';
 import clsx from 'clsx';
 import type { Chat } from '../../types';
 
@@ -44,11 +43,17 @@ export const ChatItem = ({ chat, isActive, onClick }: ChatItemProps) => {
     return null;
   };
 
+  const getLastMessagePreview = () => {
+    if (!chat.lastMessage?.content) return 'Нет сообщений';
+    const content = chat.lastMessage.content;
+    return content.length > 40 ? content.substring(0, 40) + '...' : content;
+  };
+
   return (
     <div
       onClick={onClick}
       className={clsx(
-        'chat-item flex items-center gap-3 px-3 relative',
+        'chat-item flex items-center gap-3 px-3 relative cursor-pointer',
         isActive && 'active'
       )}
       style={{ 
@@ -61,11 +66,24 @@ export const ChatItem = ({ chat, isActive, onClick }: ChatItemProps) => {
           style={{ backgroundColor: 'var(--accent)' }}
         />
       )}
-      <Avatar
-        name={chat.title}
-        imageUrl={chat.avatarUrl}
-        size="lg"
-      />
+      
+      <div className="relative">
+        <div 
+          className="w-12 h-12 rounded-full flex items-center justify-center text-white font-medium"
+          style={{ backgroundColor: 'var(--accent)' }}
+        >
+          {chat.title.slice(0, 2).toUpperCase()}
+        </div>
+        {chat.type === 'private' && (
+          <div 
+            className="absolute bottom-0 right-0 w-3 h-3 rounded-full border-2"
+            style={{ 
+              backgroundColor: 'var(--online)',
+              borderColor: 'var(--sidebar-bg)'
+            }}
+          />
+        )}
+      </div>
       
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between">
@@ -95,18 +113,18 @@ export const ChatItem = ({ chat, isActive, onClick }: ChatItemProps) => {
             className="text-[13px] truncate"
             style={{ color: 'var(--dialogs-message)' }}
           >
-            {chat.lastMessage?.content || 'Нет сообщений'}
+            {getLastMessagePreview()}
           </span>
           
           {chat.unreadCount > 0 && (
             <span 
-              className="unread-badge ml-2"
+              className="unread-badge ml-2 flex-shrink-0"
               style={{ 
                 backgroundColor: 'var(--dialogs-unread)',
                 color: 'var(--dialogs-unread-text)'
               }}
             >
-              {chat.unreadCount}
+              {chat.unreadCount > 99 ? '99+' : chat.unreadCount}
             </span>
           )}
         </div>
