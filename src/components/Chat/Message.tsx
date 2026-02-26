@@ -14,45 +14,42 @@ export const MessageBubble = ({ message, isOutgoing }: MessageProps) => {
   const getStatusIcon = () => {
     switch (message.status) {
       case 'sending':
-        return '🕐';
+        return <span className="text-[11px]">🕐</span>;
       case 'sent':
-        return '✓';
+        return <span className="status-sent text-[12px]">✓</span>;
       case 'delivered':
-        return '✓✓';
+        return <span className="status-delivered text-[12px]">✓✓</span>;
       case 'read':
-        return <span className="text-[#6ab3f3]">✓✓</span>;
+        return <span className="status-read text-[12px]">✓✓</span>;
       default:
         return '';
     }
   };
 
   return (
-    <div className={clsx('flex mb-2', isOutgoing ? 'justify-end' : 'justify-start')}>
+    <div className={clsx('flex mb-1', isOutgoing ? 'justify-end' : 'justify-start')}>
       <div
         className={clsx(
-          'max-w-[70%] px-3 py-1.5 rounded-[18px] relative shadow-sm',
-          isOutgoing
-            ? 'bg-[#e5ffc8] dark:bg-[#2b5278]'
-            : 'bg-[#ffffff] dark:bg-[#182533]',
+          'message-bubble',
+          isOutgoing ? 'message-bubble-out' : 'message-bubble-in'
         )}
       >
-        <p className="text-[14px] text-[#000000] dark:text-[#ffffff] whitespace-pre-wrap break-words">
+        <p 
+          className="text-[14px] whitespace-pre-wrap break-words"
+          style={{ color: 'var(--window-fg)' }}
+        >
           {message.content}
         </p>
         
-        <div className={clsx(
-          'flex items-center justify-end gap-1 mt-1',
-          isOutgoing ? 'text-[#a0a0a0]' : 'text-[#a0a0a0] dark:text-[#5e6c7e]'
-        )}>
+        <div 
+          className="flex items-center justify-end gap-1 mt-1"
+          style={{ color: 'var(--dialogs-date)' }}
+        >
           <span className="text-[11px]">
             {formatTime(message.timestamp)}
           </span>
           
-          {isOutgoing && (
-            <span className="text-[12px]">
-              {getStatusIcon()}
-            </span>
-          )}
+          {isOutgoing && getStatusIcon()}
         </div>
       </div>
     </div>

@@ -3,37 +3,282 @@
 @tailwind utilities;
 
 :root {
+  /* Light theme - Telegram colors */
   --msg-in-bg: #ffffff;
   --msg-out-bg: #e5ffc8;
+  --msg-in-border: rgba(0, 0, 0, 0.05);
+  --msg-out-border: rgba(0, 0, 0, 0.05);
+  
   --dialogs-bg: #ffffff;
+  --dialogs-bg-hover: #f5f5f5;
+  --dialogs-bg-active: #f0f0f0;
+  --dialogs-name: #000000;
+  --dialogs-message: #999999;
+  --dialogs-date: #8e8e8e;
+  --dialogs-unread: #6ab3f3;
+  --dialogs-unread-text: #ffffff;
+  
+  --sidebar-bg: #ffffff;
+  --sidebar-border: #e8e8e8;
+  --chat-bg: #ffffff;
+  --chat-bg-pattern: #f5f5f5;
+  --header-bg: #ffffff;
+  --header-border: #e8e8e8;
+  
   --window-bg: #ffffff;
   --window-fg: #000000;
+  --window-subfg: #999999;
+  
   --accent: #0088cc;
+  --accent-hover: #006699;
+  --accent-light: #6ab3f3;
+  
+  --compose-bg: #ffffff;
+  --compose-border: #e0e0e0;
+  --compose-input-bg: #f5f5f5;
+  --compose-icon: #a0a0a0;
+  --compose-icon-hover: #0088cc;
+  
   --scrollbar: #c2c2c2;
+  --scrollbar-hover: #a0a0a0;
+  
+  --online: #4cda58;
+  --verified: #40c4ff;
+  
+  /* Message status */
+  --status-sent: #a0a0a0;
+  --status-delivered: #a0a0a0;
+  --status-read: #6ab3f3;
+  
+  /* Shadows */
+  --shadow-msg: rgba(0, 0, 0, 0.08);
 }
 
-.dark {
+[data-theme="dark"] {
   --msg-in-bg: #182533;
   --msg-out-bg: #2b5278;
+  --msg-in-border: rgba(255, 255, 255, 0.05);
+  --msg-out-border: rgba(255, 255, 255, 0.05);
+  
   --dialogs-bg: #17212b;
+  --dialogs-bg-hover: #1e2a38;
+  --dialogs-bg-active: #233242;
+  --dialogs-name: #ffffff;
+  --dialogs-message: #708499;
+  --dialogs-date: #5e6c7e;
+  --dialogs-unread: #6ab3f3;
+  --dialogs-unread-text: #ffffff;
+  
+  --sidebar-bg: #17212b;
+  --sidebar-border: #233242;
+  --chat-bg: #17212b;
+  --chat-bg-pattern: #1e2a38;
+  --header-bg: #17212b;
+  --header-border: #233242;
+  
   --window-bg: #17212b;
   --window-fg: #ffffff;
+  --window-subfg: #708499;
+  
   --accent: #6ab3f3;
+  --accent-hover: #5288c1;
+  --accent-light: #6ab3f3;
+  
+  --compose-bg: #232e3c;
+  --compose-border: #2f3e50;
+  --compose-input-bg: #2f3e50;
+  --compose-icon: #708499;
+  --compose-icon-hover: #6ab3f3;
+  
   --scrollbar: #3e4a57;
+  --scrollbar-hover: #5e6c7e;
+  
+  --online: #4cda58;
+  --verified: #40c4ff;
+  
+  --status-sent: #5e6c7e;
+  --status-delivered: #5e6c7e;
+  --status-read: #6ab3f3;
+  
+  --shadow-msg: rgba(0, 0, 0, 0.3);
 }
 
 * {
   font-family: "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+/* Telegram-like scrollbar */
 ::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
   background: var(--scrollbar);
-  border-radius: 2px;
+  border-radius: 2.5px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-hover);
+}
+
+/* Message bubble styles */
+.message-bubble {
+  max-width: 70%;
+  padding: 8px 12px;
+  border-radius: 18px;
+  position: relative;
+  word-wrap: break-word;
+}
+
+.message-bubble-in {
+  background: var(--msg-in-bg);
+  border: 1px solid var(--msg-in-border);
+  margin-right: auto;
+}
+
+.message-bubble-out {
+  background: var(--msg-out-bg);
+  border: 1px solid var(--msg-out-border);
+  margin-left: auto;
+}
+
+/* Chat list item */
+.chat-item {
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.chat-item:hover {
+  background: var(--dialogs-bg-hover);
+}
+
+.chat-item.active {
+  background: var(--dialogs-bg-active);
+}
+
+/* Avatar */
+.avatar {
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: white;
+  flex-shrink: 0;
+}
+
+.avatar-sm { width: 36px; height: 36px; font-size: 12px; }
+.avatar-md { width: 42px; height: 42px; font-size: 14px; }
+.avatar-lg { width: 52px; height: 52px; font-size: 16px; }
+
+/* Unread badge */
+.unread-badge {
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Input styling */
+.telegram-input {
+  background: var(--compose-input-bg);
+  border: none;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 14px;
+  color: var(--window-fg);
+  outline: none;
+  transition: box-shadow 0.2s ease;
+}
+
+.telegram-input:focus {
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
+.telegram-input::placeholder {
+  color: var(--compose-icon);
+}
+
+/* Send button */
+.send-button {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: white;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.send-button:hover {
+  background: var(--accent-hover);
+}
+
+.send-button:active {
+  transform: scale(0.95);
+}
+
+.send-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Message status icons */
+.status-sent { color: var(--status-sent); }
+.status-delivered { color: var(--status-delivered); }
+.status-read { color: var(--status-read); }
+
+/* Online indicator */
+.online-indicator {
+  width: 12px;
+  height: 12px;
+  background: var(--online);
+  border-radius: 50%;
+  border: 2px solid var(--sidebar-bg);
+  position: absolute;
+  bottom: 0;
+  right: 0;
+}
+
+/* Verified badge */
+.verified-badge {
+  color: var(--verified);
+  margin-left: 4px;
+}
+
+/* Date separator */
+.date-separator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 16px 0;
+}
+
+.date-separator span {
+  background: var(--dialogs-bg-hover);
+  padding: 4px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  color: var(--window-subfg);
 }

@@ -61,7 +61,23 @@ export const MessageInput = () => {
   };
 
   return (
-    <div className="flex items-end gap-2 p-3 bg-[#ffffff] dark:bg-[#232e3c] border-t border-[#e0e0e0] dark:border-[#2f3e50]">
+    <div 
+      className="flex items-end gap-2 p-3"
+      style={{ 
+        backgroundColor: 'var(--compose-bg)',
+        borderTop: '1px solid var(--compose-border)'
+      }}
+    >
+      {/* Attach button */}
+      <button 
+        className="p-2 rounded-full hover:bg-[var(--dialogs-bg-hover)] transition-colors flex-shrink-0"
+        style={{ color: 'var(--compose-icon)' }}
+      >
+        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+        </svg>
+      </button>
+      
       <textarea
         ref={textareaRef}
         value={text}
@@ -69,15 +85,25 @@ export const MessageInput = () => {
         onKeyDown={handleKeyDown}
         placeholder="Написать сообщение..."
         rows={1}
-        className="flex-1 px-3 py-2 bg-[#f5f5f5] dark:bg-[#2f3e50] rounded-lg resize-none text-[14px] text-[#000000] dark:text-[#ffffff] placeholder-[#a0a0a0] outline-none focus:ring-1 focus:ring-[#0088cc] min-h-[40px] max-h-[120px]"
+        className="telegram-input flex-1 resize-none min-h-[40px] max-h-[120px]"
       />
+      
+      {/* Emoji button */}
+      <button 
+        className="p-2 rounded-full hover:bg-[var(--dialogs-bg-hover)] transition-colors flex-shrink-0"
+        style={{ color: 'var(--compose-icon)' }}
+      >
+        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      </button>
       
       <button
         onClick={handleSend}
         disabled={!text.trim()}
-        className="p-2.5 rounded-full bg-[#0088cc] hover:bg-[#006699] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0"
+        className="send-button"
       >
-        <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
         </svg>
       </button>

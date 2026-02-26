@@ -14,7 +14,6 @@ function App() {
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
 
   useEffect(() => {
-    // Применяем тему
     if (theme === 'dark') {
       document.documentElement.classList.add('dark');
     } else {
@@ -26,7 +25,6 @@ function App() {
     if (isAuthenticated) {
       connectWebSocket();
       
-      // Демо данные чатов
       const demoChats: Chat[] = [
         {
           id: '1',
@@ -124,57 +122,71 @@ function App() {
     chat.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Обновляем чаты в сторе после фильтрации
   useEffect(() => {
     if (searchQuery) {
       useChatStore.setState({ chats: filteredChats });
-    } else {
-      // Возвращаем все чаты (в реальном приложении это будет запрос к API)
     }
-  }, [searchQuery]);
+  }, [searchQuery, filteredChats]);
 
   if (!isAuthenticated) {
     return <LoginScreen />;
   }
 
   return (
-    <div className="flex h-screen bg-[#ffffff] dark:bg-[#17212b]">
-      {/* Sidebar */}
-      <div className="w-[325px] border-r border-[#e0e0e0] dark:border-[#2f3e50] flex flex-col">
+    <div className="flex h-screen" style={{ backgroundColor: 'var(--chat-bg)' }}>
+      {/* Sidebar - как в Telegram */}
+      <div 
+        className="w-[325px] flex flex-col"
+        style={{ 
+          backgroundColor: 'var(--sidebar-bg)',
+          borderRight: '1px solid var(--sidebar-border)'
+        }}
+      >
         {/* Header */}
-        <div className="h-[60px] flex items-center justify-between px-4 border-b border-[#e0e0e0] dark:border-[#2f3e50]">
-          <div className="flex items-center gap-2">
+        <div 
+          className="h-[60px] flex items-center justify-between px-4"
+          style={{ borderBottom: '1px solid var(--header-border)' }}
+        >
+          <div className="flex items-center gap-3">
             {user && (
-              <div className="w-8 h-8 rounded-full bg-[#0088cc] flex items-center justify-center text-white text-sm font-semibold">
+              <div 
+                className="avatar avatar-md"
+                style={{ backgroundColor: 'var(--accent)' }}
+              >
                 {user.displayName.slice(0, 2).toUpperCase()}
               </div>
             )}
+          </div>
+          
+          <div className="flex items-center gap-1">
             <button
               onClick={logout}
-              className="text-[#999999] hover:text-[#0088cc] transition-colors"
+              className="p-2 rounded-full hover:bg-[var(--dialogs-bg-hover)] transition-colors"
               title="Выйти"
+              style={{ color: 'var(--window-subfg)' }}
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
               </svg>
             </button>
+            
+            <button
+              onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+              className="p-2 rounded-full hover:bg-[var(--dialogs-bg-hover)] transition-colors"
+              title={theme === 'light' ? 'Тёмная тема' : 'Светлая тема'}
+              style={{ color: 'var(--window-subfg)' }}
+            >
+              {theme === 'light' ? (
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                </svg>
+              ) : (
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+              )}
+            </button>
           </div>
-          
-          <button
-            onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
-            className="p-2 rounded-full hover:bg-[#f5f5f5] dark:hover:bg-[#2f3e50] transition-colors"
-            title={theme === 'light' ? 'Тёмная тема' : 'Светлая тема'}
-          >
-            {theme === 'light' ? (
-              <svg className="w-5 h-5 text-[#999999]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-              </svg>
-            ) : (
-              <svg className="w-5 h-5 text-[#ffcd48]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-              </svg>
-            )}
-          </button>
         </div>
         
         {/* Search */}
@@ -184,7 +196,11 @@ function App() {
             placeholder="Поиск"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full px-3 py-1.5 bg-[#f5f5f5] dark:bg-[#2f3e50] rounded-lg text-[14px] text-[#000000] dark:text-[#ffffff] placeholder-[#a0a0a0] outline-none"
+            className="w-full px-3 py-1.5 rounded-lg text-[14px] outline-none"
+            style={{ 
+              backgroundColor: 'var(--compose-input-bg)',
+              color: 'var(--window-fg)'
+            }}
           />
         </div>
         

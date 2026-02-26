@@ -26,13 +26,35 @@ export const ChatItem = ({ chat, isActive, onClick }: ChatItemProps) => {
     return date.toLocaleDateString([], { day: 'numeric', month: 'short' });
   };
 
+  const getChatIcon = () => {
+    if (chat.type === 'group') {
+      return (
+        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+        </svg>
+      );
+    }
+    if (chat.type === 'channel') {
+      return (
+        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+        </svg>
+      );
+    }
+    return null;
+  };
+
   return (
     <div
       onClick={onClick}
       className={clsx(
-        'flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors border-b border-[#e8e8e8] dark:border-[#233242]',
-        isActive ? 'bg-[#f0f0f0] dark:bg-[#1e2a38]' : 'hover:bg-[#f5f5f5] dark:hover:bg-[#1e2a38]'
+        'chat-item flex items-center gap-3',
+        isActive && 'active'
       )}
+      style={{ 
+        backgroundColor: isActive ? 'var(--dialogs-bg-active)' : 'transparent',
+        borderBottom: '1px solid var(--sidebar-border)'
+      }}
     >
       <Avatar
         name={chat.title}
@@ -42,27 +64,43 @@ export const ChatItem = ({ chat, isActive, onClick }: ChatItemProps) => {
       
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between">
-          <span className={clsx(
-            'font-semibold text-sm truncate',
-            isActive ? 'text-[#000000] dark:text-[#ffffff]' : 'text-[#000000] dark:text-[#ffffff]'
-          )}>
-            {chat.title}
-          </span>
-          <span className="text-[11px] text-[#8e8e8e] dark:text-[#5e6c7e] flex-shrink-0 ml-2">
+          <div className="flex items-center">
+            <span 
+              className="font-semibold text-sm truncate"
+              style={{ color: 'var(--dialogs-name)' }}
+            >
+              {chat.title}
+            </span>
+            {chat.type !== 'private' && (
+              <span className="ml-1" style={{ color: 'var(--window-subfg)' }}>
+                {getChatIcon()}
+              </span>
+            )}
+          </div>
+          <span 
+            className="text-[11px] flex-shrink-0 ml-2"
+            style={{ color: 'var(--dialogs-date)' }}
+          >
             {formatTime(chat.lastMessage?.timestamp)}
           </span>
         </div>
         
         <div className="flex items-center justify-between mt-0.5">
-          <span className="text-[13px] text-[#999999] dark:text-[#708499] truncate">
+          <span 
+            className="text-[13px] truncate"
+            style={{ color: 'var(--dialogs-message)' }}
+          >
             {chat.lastMessage?.content || 'Нет сообщений'}
           </span>
           
           {chat.unreadCount > 0 && (
-            <span className={clsx(
-              'min-w-[20px] h-5 px-1.5 rounded-[10px] flex items-center justify-center text-[12px] font-medium text-white ml-2',
-              chat.unreadCount > 0 ? 'bg-[#6ab3f3]' : 'bg-[#d7d7d7]'
-            )}>
+            <span 
+              className="unread-badge ml-2"
+              style={{ 
+                backgroundColor: 'var(--dialogs-unread)',
+                color: 'var(--dialogs-unread-text)'
+              }}
+            >
               {chat.unreadCount}
             </span>
           )}
