@@ -42,4 +42,8 @@ export const chatApi = {
     const { data } = await api.post(`/chats/${chatId}/messages`, { content });
     return data;
   },
+  createChat: async (type: string, title: string, members: string[]) => {
+    const { data } = await api.post('/chats', { type, title, members });
+    return data;
+  },
 };

@@ -303,11 +303,52 @@ app.post('/api/chats', async (req, res) => {
     const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
     const { type, title, members } = req.body;
 
+    // For private chats, check if chat already exists
+    if (type === 'private' && members && members.length > 0) {
+      const existingChat = await pool.query(
+        `SELECT c.id FROM chats c
+         JOIN chat_members cm1 ON c.id = cm1.chat_id AND cm1.user_id = $1
+         JOIN chat_members cm2 ON c.id = cm2.chat_id AND cm2.user_id = $2
+         WHERE c.type = 'private'`,
+        [decoded.userId, members[0]]
+      );
+
+      if (existingChat.rows.length > 0) {
+        // Return existing chat
+        const chatId = existingChat.rows[0].id;
+        const chatData = await pool.query('SELECT * FROM chats WHERE id = $1', [chatId]);
+        const otherUser = await pool.query(
+          'SELECT id, username, display_name, avatar_url FROM users WHERE id = $1',
+          [members[0]]
+        );
+        
+        return res.json({
+          id: chatData.rows[0].id,
+          type: chatData.rows[0].type,
+          title: otherUser.rows[0].display_name,
+          avatarUrl: otherUser.rows[0].avatar_url,
+          unreadCount: 0,
+          members: 2,
+          createdAt: chatData.rows[0].created_at,
+        });
+      }
+    }
+
+    // Get other user's name for private chat
+    let chatTitle = title;
+    if (type === 'private' && members && members.length > 0) {
+      const otherUser = await pool.query(
+        'SELECT display_name FROM users WHERE id = $1',
+        [members[0]]
+      );
+      chatTitle = otherUser.rows[0]?.display_name || 'Chat';
+    }
+
     const chatResult = await pool.query(
       `INSERT INTO chats (type, title, created_by)
        VALUES ($1, $2, $3)
        RETURNING *`,
-      [type, title, decoded.userId]
+      [type, chatTitle, decoded.userId]
     );
 
     const chat = chatResult.rows[0];
@@ -328,7 +369,15 @@ app.post('/api/chats', async (req, res) => {
       }
     }
 
-    res.json(chat);
+    res.json({
+      id: chat.id,
+      type: chat.type,
+      title: chat.title,
+      avatarUrl: chat.avatar_url,
+      unreadCount: 0,
+      members: members ? members.length + 1 : 1,
+      createdAt: chat.created_at,
+    });
   } catch (e: any) {
     console.error(e);
     res.status(500).json({ error: e.message });
@@ -409,6 +458,43 @@ app.post('/api/chats/:chatId/messages', async (req, res) => {
       timestamp: message.created_at,
       status: 'sent',
     });
+  } catch (e: any) {
+    console.error(e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// User search
+app.get('/api/users/search', async (req, res) => {
+  try {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    if (!token) return res.status(401).json({ error: 'Unauthorized' });
+
+    const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
+    const query = req.query.q as string;
+
+    if (!query || query.length < 2) {
+      return res.json([]);
+    }
+
+    const result = await pool.query(
+      `SELECT id, username, display_name, avatar_url 
+       FROM users 
+       WHERE id != $1 AND (
+         username ILIKE $2 OR display_name ILIKE $2
+       )
+       LIMIT 20`,
+      [decoded.userId, `%${query}%`]
+    );
+
+    const users = result.rows.map(row => ({
+      id: row.id,
+      username: row.username,
+      displayName: row.display_name,
+      avatarUrl: row.avatar_url,
+    }));
+
+    res.json(users);
   } catch (e: any) {
     console.error(e);
     res.status(500).json({ error: e.message });

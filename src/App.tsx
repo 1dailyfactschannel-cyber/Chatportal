@@ -2,13 +2,13 @@ import { useEffect, useState } from 'react';
 import { ChatList } from './components/Sidebar/ChatList';
 import { ChatFolders, ChatFolder } from './components/Sidebar/ChatFolders';
 import { SidebarMenu } from './components/Sidebar/SidebarMenu';
+import { NewChatModal } from './components/Sidebar/NewChatModal';
 import { ChatView } from './components/Chat/ChatView';
 import { LoginScreen } from './components/LoginScreen';
 import { useAuthStore } from './stores/authStore';
 import { useChatStore } from './stores/chatStore';
 import { connectWebSocket, disconnectWebSocket } from './services/websocket';
 import { chatApi } from './services/api';
-import type { Chat } from './types';
 
 function App() {
   const { isAuthenticated, user } = useAuthStore();
@@ -17,6 +17,7 @@ function App() {
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [sidebarMenuOpen, setSidebarMenuOpen] = useState(false);
   const [activeFolder, setActiveFolder] = useState<ChatFolder>('all');
+  const [newChatOpen, setNewChatOpen] = useState(false);
 
   useEffect(() => {
     if (theme === 'dark') {
@@ -68,6 +69,7 @@ function App() {
   return (
     <div className="flex h-screen" style={{ backgroundColor: 'var(--chat-bg)' }}>
       <SidebarMenu isOpen={sidebarMenuOpen} onClose={() => setSidebarMenuOpen(false)} />
+      <NewChatModal isOpen={newChatOpen} onClose={() => setNewChatOpen(false)} />
       
       <div 
         className="flex"
@@ -89,16 +91,29 @@ function App() {
             className="h-[60px] flex items-center justify-between px-3"
             style={{ borderBottom: '1px solid var(--header-border)' }}
           >
-            <button
-              onClick={() => setSidebarMenuOpen(true)}
-              className="p-2 rounded-full hover:bg-[var(--dialogs-bg-hover)] transition-colors"
-              style={{ color: 'var(--window-fg)' }}
-              title="Меню"
-            >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setSidebarMenuOpen(true)}
+                className="p-2 rounded-full hover:bg-[var(--dialogs-bg-hover)] transition-colors"
+                style={{ color: 'var(--window-fg)' }}
+                title="Меню"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
+              
+              <button
+                onClick={() => setNewChatOpen(true)}
+                className="p-2 rounded-full hover:bg-[var(--dialogs-bg-hover)] transition-colors"
+                style={{ color: 'var(--window-fg)' }}
+                title="Новый чат"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+              </button>
+            </div>
             
             <button
               onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
