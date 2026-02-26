@@ -63,6 +63,7 @@ async function initDB() {
       sender_id UUID REFERENCES users(id) ON DELETE SET NULL,
       content TEXT NOT NULL,
       content_type VARCHAR(20) DEFAULT 'text',
+      status VARCHAR(20) DEFAULT 'sent',
       reply_to UUID REFERENCES messages(id),
       created_at TIMESTAMP DEFAULT NOW()
     );
@@ -157,22 +158,29 @@ async function handleNewMessage(senderId: string, message: any) {
 function handleTyping(senderId: string, message: any) {
   const { chatId, isTyping } = message;
   
-  // Получаем участников чата и отправляем им индикацию
   pool.query(
-    'SELECT user_id FROM chat_members WHERE chat_id = $1 AND user_id != $2',
-    [chatId, senderId]
-  ).then(result => {
-    for (const row of result.rows) {
-      const client = clients.get(row.user_id);
-      if (client && client.readyState === 1) {
-        client.send(JSON.stringify({
-          type: 'typing',
-          chatId,
-          userId: senderId,
-          isTyping,
-        }));
+    'SELECT display_name FROM users WHERE id = $1',
+    [senderId]
+  ).then(userResult => {
+    const username = userResult.rows[0]?.display_name || 'User';
+    
+    pool.query(
+      'SELECT user_id FROM chat_members WHERE chat_id = $1 AND user_id != $2',
+      [chatId, senderId]
+    ).then(result => {
+      for (const row of result.rows) {
+        const client = clients.get(row.user_id);
+        if (client && client.readyState === 1) {
+          client.send(JSON.stringify({
+            type: 'typing',
+            chatId,
+            userId: senderId,
+            username,
+            isTyping,
+          }));
+        }
       }
-    }
+    });
   });
 }
 
@@ -489,6 +497,41 @@ app.get('/api/users/search', async (req, res) => {
 
     const users = result.rows.map(row => ({
       id: row.id,
+      username: row.username,
+      displayName: row.display_name,
+      avatarUrl: row.avatar_url,
+    }));
+
+    res.json(users);
+  } catch (e: any) {
+    console.error(e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Mark messages as read
+app.post('/api/chats/:chatId/read', async (req, res) => {
+  try {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    if (!token) return res.status(401).json({ error: 'Unauthorized' });
+
+    const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
+    const { chatId } = req.params;
+
+    await pool.query(
+      `UPDATE messages SET status = 'read' 
+       WHERE chat_id = $1 AND sender_id != $2 AND status != 'read'`,
+      [chatId, decoded.userId]
+    );
+
+    res.json({ success: true });
+  } catch (e: any) {
+    console.error(e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Start server
       username: row.username,
       displayName: row.display_name,
       avatarUrl: row.avatar_url,

@@ -30,6 +30,10 @@ export const connectWebSocket = () => {
             useChatStore.getState().addMessage(data.chatId, data.message);
             break;
           case 'typing':
+            const user = useAuthStore.getState().user;
+            if (user && data.userId !== user.id) {
+              useChatStore.getState().setTyping(data.chatId, data.userId, data.username || 'User', data.isTyping);
+            }
             break;
           case 'new_chat':
             const chats = useChatStore.getState().chats;

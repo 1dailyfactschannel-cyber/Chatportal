@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { ChatList } from './components/Sidebar/ChatList';
 import { ChatFolders, ChatFolder } from './components/Sidebar/ChatFolders';
 import { SidebarMenu } from './components/Sidebar/SidebarMenu';
-import { NewChatModal } from './components/Sidebar/NewChatModal';
+import { CreateChatModal } from './components/Sidebar/CreateChatModal';
 import { ChatView } from './components/Chat/ChatView';
 import { LoginScreen } from './components/LoginScreen';
 import { useAuthStore } from './stores/authStore';
@@ -69,7 +69,7 @@ function App() {
   return (
     <div className="flex h-screen" style={{ backgroundColor: 'var(--chat-bg)' }}>
       <SidebarMenu isOpen={sidebarMenuOpen} onClose={() => setSidebarMenuOpen(false)} />
-      <NewChatModal isOpen={newChatOpen} onClose={() => setNewChatOpen(false)} />
+      <CreateChatModal isOpen={newChatOpen} onClose={() => setNewChatOpen(false)} />
       
       <div 
         className="flex"
