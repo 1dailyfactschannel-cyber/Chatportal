@@ -8,7 +8,7 @@ COPY server/tsconfig.json ./server/
 
 # Install server dependencies
 WORKDIR /app/server
-RUN npm ci
+RUN npm install
 
 # Copy server source
 COPY server/src ./src
