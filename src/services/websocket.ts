@@ -1,9 +1,8 @@
 import { useChatStore } from '../stores/chatStore';
 import { useAuthStore } from '../stores/authStore';
-import type { Message } from '../types';
 
 let ws: WebSocket | null = null;
-let reconnectTimeout: NodeJS.Timeout | null = null;
+let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
 
 export const connectWebSocket = () => {
   const token = useAuthStore.getState().token;
@@ -27,7 +26,6 @@ export const connectWebSocket = () => {
             useChatStore.getState().addMessage(data.chatId, data.message);
             break;
           case 'typing':
-            // Обработка индикации печати
             break;
           case 'new_chat':
             const chats = useChatStore.getState().chats;

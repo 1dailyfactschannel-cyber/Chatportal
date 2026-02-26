@@ -5,13 +5,12 @@ import { sendMessage, sendTyping } from '../../services/websocket';
 export const MessageInput = () => {
   const [text, setText] = useState('');
   const { activeChat, addMessage } = useChatStore();
-  const typingTimeout = useRef<NodeJS.Timeout>();
+  const typingTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleSend = () => {
     if (!text.trim() || !activeChat) return;
     
-    // Добавляем сообщение локально сразу (optimistic update)
     const tempMessage = {
       id: `temp-${Date.now()}`,
       chatId: activeChat.id,
@@ -23,14 +22,13 @@ export const MessageInput = () => {
     };
     
     addMessage(activeChat.id, tempMessage);
-    
-    // Отправляем на сервер
     sendMessage(activeChat.id, text);
     
     setText('');
-    sendTyping(activeChat.id, false);
+    if (activeChat) {
+      sendTyping(activeChat.id, false);
+    }
     
-    // Сбрасываем высоту textarea
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
     }
@@ -46,7 +44,6 @@ export const MessageInput = () => {
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setText(e.target.value);
     
-    // Автоматическая высота textarea
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
       textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 120) + 'px';
@@ -54,7 +51,9 @@ export const MessageInput = () => {
     
     if (activeChat) {
       sendTyping(activeChat.id, true);
-      clearTimeout(typingTimeout.current);
+      if (typingTimeout.current) {
+        clearTimeout(typingTimeout.current);
+      }
       typingTimeout.current = setTimeout(() => {
         sendTyping(activeChat.id, false);
       }, 2000);

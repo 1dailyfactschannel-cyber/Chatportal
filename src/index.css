@@ -12,7 +12,7 @@
   --scrollbar: #c2c2c2;
 }
 
-[data-theme="dark"] {
+.dark {
   --msg-in-bg: #182533;
   --msg-out-bg: #2b5278;
   --dialogs-bg: #17212b;

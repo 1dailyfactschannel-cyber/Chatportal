@@ -12,6 +12,7 @@ export default defineConfig({
   build: {
     target: 'chrome105',
     minify: 'esbuild',
-    sourcemap: true,
+    sourcemap: false,
+    outDir: 'dist',
   },
 })

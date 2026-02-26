@@ -1,12 +1,12 @@
 import clsx from 'clsx';
-import type { Message } from '../../types';
+import type { Message as MessageType } from '../../types';
 
 interface MessageProps {
-  message: Message;
+  message: MessageType;
   isOutgoing: boolean;
 }
 
-export const Message = ({ message, isOutgoing }: MessageProps) => {
+export const MessageBubble = ({ message, isOutgoing }: MessageProps) => {
   const formatTime = (timestamp: string) => {
     return new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };

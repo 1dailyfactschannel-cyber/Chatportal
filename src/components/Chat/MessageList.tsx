@@ -1,34 +1,18 @@
 import { useEffect, useRef } from 'react';
-import { FixedSizeList as List } from 'react-window';
-import { Message } from './Message';
+import { MessageBubble } from './Message';
 import { useChatStore } from '../../stores/chatStore';
 import { useAuthStore } from '../../stores/authStore';
-
-const ITEM_HEIGHT = 60;
 
 export const MessageList = () => {
   const { activeChat, messages } = useChatStore();
   const { user } = useAuthStore();
-  const listRef = useRef<any>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   
   const chatMessages = activeChat ? messages[activeChat.id] || [] : [];
 
   useEffect(() => {
-    if (listRef.current && chatMessages.length > 0) {
-      listRef.current.scrollToItem(chatMessages.length - 1);
-    }
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [chatMessages.length, activeChat?.id]);
-
-  const Row = ({ index, style }: { index: number; style: React.CSSProperties }) => {
-    const message = chatMessages[index];
-    const isOutgoing = message.senderId === user?.id;
-    
-    return (
-      <div style={style}>
-        <Message message={message} isOutgoing={isOutgoing} />
-      </div>
-    );
-  };
 
   if (!activeChat) {
     return (
@@ -47,15 +31,15 @@ export const MessageList = () => {
   }
 
   return (
-    <List
-      ref={listRef}
-      height={window.innerHeight - 180}
-      itemCount={chatMessages.length}
-      itemSize={ITEM_HEIGHT}
-      width="100%"
-      className="px-4"
-    >
-      {Row}
-    </List>
+    <div className="flex-1 overflow-y-auto px-4 py-2">
+      {chatMessages.map((message) => (
+        <MessageBubble 
+          key={message.id} 
+          message={message} 
+          isOutgoing={message.senderId === user?.id} 
+        />
+      ))}
+      <div ref={messagesEndRef} />
+    </div>
   );
 };
