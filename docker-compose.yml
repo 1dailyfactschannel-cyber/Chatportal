@@ -57,15 +57,12 @@ services:
       retries: 5
     restart: unless-stopped
 
-  # RustFS S3 Storage
+  # RustFS S3 Storage (internal only - no external ports needed)
   rustfs:
     image: rustfs/rustfs:latest
     environment:
       - RUSTFS_ROOT_USER=admin
       - RUSTFS_ROOT_PASSWORD=admin123
-    ports:
-      - "9000:9000"
-      - "9001:9001"
     volumes:
       - rustfs_data:/data
     restart: unless-stopped
