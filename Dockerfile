@@ -9,8 +9,12 @@ COPY package*.json ./
 # Install dependencies
 RUN npm ci
 
-# Copy source files
-COPY . .
+# Copy source files (excluding server and src-tauri)
+COPY index.html ./
+COPY src ./src
+COPY vite.config.ts ./
+COPY tailwind.config.js ./
+COPY postcss.config.js ./
 
 # Build the React app
 RUN npm run build
@@ -20,8 +24,6 @@ FROM nginx:alpine
 
 # Copy built files from builder
 COPY --from=builder /app/dist /usr/share/nginx/html
-
-# Copy nginx config
 COPY nginx.conf /etc/nginx/nginx.conf
 
 EXPOSE 80
