@@ -8,6 +8,8 @@ services:
       dockerfile: Dockerfile
     ports:
       - "3000:80"
+    depends_on:
+      - api
     restart: unless-stopped
 
   # Backend API
@@ -20,10 +22,13 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3001
-      - DB_HOST=10.0.3.10
+      - DB_HOST=postgres
       - POSTGRES_USER=messenger
       - POSTGRES_PASSWORD=messenger_pass
       - POSTGRES_DB=messenger
+    depends_on:
+      postgres:
+        condition: service_healthy
     restart: unless-stopped
 
   # PostgreSQL
@@ -35,6 +40,11 @@ services:
       - POSTGRES_DB=messenger
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U messenger -d messenger"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     restart: unless-stopped
 
   # Redis
@@ -42,6 +52,11 @@ services:
     image: redis:7-alpine
     volumes:
       - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     restart: unless-stopped
 
   # RustFS S3 Storage
