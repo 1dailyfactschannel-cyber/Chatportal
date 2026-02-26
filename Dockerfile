@@ -6,10 +6,10 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci
+# Install dependencies (use legacy-peer-deps for React 19 compatibility)
+RUN npm ci --legacy-peer-deps
 
-# Copy source files (excluding server and src-tauri)
+# Copy source files
 COPY index.html ./
 COPY src ./src
 COPY vite.config.ts ./
