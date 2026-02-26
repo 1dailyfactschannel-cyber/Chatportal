@@ -1,0 +1,77 @@
+import { useChatStore } from '../stores/chatStore';
+import { useAuthStore } from '../stores/authStore';
+import type { Message } from '../types';
+
+let ws: WebSocket | null = null;
+let reconnectTimeout: NodeJS.Timeout | null = null;
+
+export const connectWebSocket = () => {
+  const token = useAuthStore.getState().token;
+  if (!token) return;
+
+  if (ws?.readyState === WebSocket.OPEN) return;
+
+  try {
+    ws = new WebSocket(`ws://89.208.14.253:3001/ws?token=${token}`);
+
+    ws.onopen = () => {
+      console.log('WebSocket connected');
+    };
+
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        
+        switch (data.type) {
+          case 'message':
+            useChatStore.getState().addMessage(data.chatId, data.message);
+            break;
+          case 'typing':
+            // Обработка индикации печати
+            break;
+          case 'new_chat':
+            const chats = useChatStore.getState().chats;
+            useChatStore.setState({ chats: [data.chat, ...chats] });
+            break;
+        }
+      } catch (e) {
+        console.error('Failed to parse WebSocket message:', e);
+      }
+    };
+
+    ws.onclose = () => {
+      console.log('WebSocket disconnected, reconnecting...');
+      reconnectTimeout = setTimeout(connectWebSocket, 3000);
+    };
+
+    ws.onerror = (error) => {
+      console.error('WebSocket error:', error);
+    };
+  } catch (error) {
+    console.error('Failed to connect WebSocket:', error);
+    reconnectTimeout = setTimeout(connectWebSocket, 3000);
+  }
+};
+
+export const disconnectWebSocket = () => {
+  if (reconnectTimeout) {
+    clearTimeout(reconnectTimeout);
+    reconnectTimeout = null;
+  }
+  if (ws) {
+    ws.close();
+    ws = null;
+  }
+};
+
+export const sendMessage = (chatId: string, content: string) => {
+  if (ws?.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ type: 'message', chatId, content }));
+  }
+};
+
+export const sendTyping = (chatId: string, isTyping: boolean) => {
+  if (ws?.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ type: 'typing', chatId, isTyping }));
+  }
+};
