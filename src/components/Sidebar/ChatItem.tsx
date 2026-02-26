@@ -48,14 +48,19 @@ export const ChatItem = ({ chat, isActive, onClick }: ChatItemProps) => {
     <div
       onClick={onClick}
       className={clsx(
-        'chat-item flex items-center gap-3',
+        'chat-item flex items-center gap-3 px-3 relative',
         isActive && 'active'
       )}
       style={{ 
         backgroundColor: isActive ? 'var(--dialogs-bg-active)' : 'transparent',
-        borderBottom: '1px solid var(--sidebar-border)'
       }}
     >
+      {isActive && (
+        <div 
+          className="absolute left-0 top-0 bottom-0 w-[2px]"
+          style={{ backgroundColor: 'var(--accent)' }}
+        />
+      )}
       <Avatar
         name={chat.title}
         imageUrl={chat.avatarUrl}

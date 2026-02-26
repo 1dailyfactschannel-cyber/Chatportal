@@ -2,9 +2,10 @@ import { useEffect, useRef } from 'react';
 import { MessageBubble } from './Message';
 import { useChatStore } from '../../stores/chatStore';
 import { useAuthStore } from '../../stores/authStore';
+import { chatApi } from '../../services/api';
 
 export const MessageList = () => {
-  const { activeChat, messages } = useChatStore();
+  const { activeChat, messages, setMessages } = useChatStore();
   const { user } = useAuthStore();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
@@ -13,6 +14,18 @@ export const MessageList = () => {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [chatMessages.length, activeChat?.id]);
+
+  useEffect(() => {
+    if (activeChat && (!messages[activeChat.id] || messages[activeChat.id].length === 0)) {
+      chatApi.getMessages(activeChat.id)
+        .then((data) => {
+          setMessages(activeChat.id, data);
+        })
+        .catch((err) => {
+          console.error('Failed to load messages:', err);
+        });
+    }
+  }, [activeChat?.id, messages, setMessages]);
 
   if (!activeChat) {
     return (

@@ -27,12 +27,19 @@ export const MessageBubble = ({ message, isOutgoing }: MessageProps) => {
   };
 
   return (
-    <div className={clsx('flex mb-1', isOutgoing ? 'justify-end' : 'justify-start')}>
+    <div className={clsx('flex mb-2', isOutgoing ? 'justify-end' : 'justify-start')}>
       <div
         className={clsx(
           'message-bubble',
           isOutgoing ? 'message-bubble-out' : 'message-bubble-in'
         )}
+        style={{
+          background: isOutgoing 
+            ? 'linear-gradient(to right, #e5ffc8, #d4f7a3)' 
+            : '#ffffff',
+          boxShadow: 'var(--shadow-msg)',
+          borderRadius: isOutgoing ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
+        }}
       >
         <p 
           className="text-[14px] whitespace-pre-wrap break-words"

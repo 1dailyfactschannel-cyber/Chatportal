@@ -1,20 +1,23 @@
 import { useState, useRef } from 'react';
 import { useChatStore } from '../../stores/chatStore';
+import { useAuthStore } from '../../stores/authStore';
 import { sendMessage, sendTyping } from '../../services/websocket';
+import { chatApi } from '../../services/api';
 
 export const MessageInput = () => {
   const [text, setText] = useState('');
   const { activeChat, addMessage } = useChatStore();
+  const { user } = useAuthStore();
   const typingTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!text.trim() || !activeChat) return;
     
     const tempMessage = {
       id: `temp-${Date.now()}`,
       chatId: activeChat.id,
-      senderId: 'me',
+      senderId: user?.id || 'me',
       content: text,
       contentType: 'text' as const,
       timestamp: new Date().toISOString(),
@@ -23,6 +26,12 @@ export const MessageInput = () => {
     
     addMessage(activeChat.id, tempMessage);
     sendMessage(activeChat.id, text);
+    
+    try {
+      await chatApi.sendMessage(activeChat.id, text);
+    } catch (err) {
+      console.error('Failed to send message:', err);
+    }
     
     setText('');
     if (activeChat) {
@@ -62,15 +71,13 @@ export const MessageInput = () => {
 
   return (
     <div 
-      className="flex items-end gap-2 p-3"
+      className="flex items-end gap-2 px-4 pb-4"
       style={{ 
-        backgroundColor: 'var(--compose-bg)',
-        borderTop: '1px solid var(--compose-border)'
+        backgroundColor: 'transparent',
       }}
     >
-      {/* Attach button */}
       <button 
-        className="p-2 rounded-full hover:bg-[var(--dialogs-bg-hover)] transition-colors flex-shrink-0"
+        className="p-2 rounded-full hover:bg-black/5 transition-colors flex-shrink-0"
         style={{ color: 'var(--compose-icon)' }}
       >
         <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -78,19 +85,30 @@ export const MessageInput = () => {
         </svg>
       </button>
       
-      <textarea
-        ref={textareaRef}
-        value={text}
-        onChange={handleChange}
-        onKeyDown={handleKeyDown}
-        placeholder="Написать сообщение..."
-        rows={1}
-        className="telegram-input flex-1 resize-none min-h-[40px] max-h-[120px]"
-      />
+      <div 
+        className="flex-1 flex items-end rounded-full px-4 py-2"
+        style={{ 
+          backgroundColor: 'var(--compose-input-bg)',
+          border: '1px solid var(--compose-border)'
+        }}
+      >
+        <textarea
+          ref={textareaRef}
+          value={text}
+          onChange={handleChange}
+          onKeyDown={handleKeyDown}
+          placeholder="Сообщение..."
+          rows={1}
+          className="flex-1 resize-none bg-transparent outline-none text-[14px]"
+          style={{ 
+            color: 'var(--window-fg)',
+            maxHeight: '120px'
+          }}
+        />
+      </div>
       
-      {/* Emoji button */}
       <button 
-        className="p-2 rounded-full hover:bg-[var(--dialogs-bg-hover)] transition-colors flex-shrink-0"
+        className="p-2 rounded-full hover:bg-black/5 transition-colors flex-shrink-0"
         style={{ color: 'var(--compose-icon)' }}
       >
         <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -98,15 +116,29 @@ export const MessageInput = () => {
         </svg>
       </button>
       
-      <button
-        onClick={handleSend}
-        disabled={!text.trim()}
-        className="send-button"
-      >
-        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-        </svg>
-      </button>
+      {text.trim() ? (
+        <button
+          onClick={handleSend}
+          className="p-3 rounded-full flex items-center justify-center transition-all hover:scale-105"
+          style={{ 
+            backgroundColor: 'var(--accent)',
+            color: 'white'
+          }}
+        >
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+          </svg>
+        </button>
+      ) : (
+        <button 
+          className="p-2 rounded-full hover:bg-black/5 transition-colors flex-shrink-0"
+          style={{ color: 'var(--compose-icon)' }}
+        >
+          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+          </svg>
+        </button>
+      )}
     </div>
   );
 };

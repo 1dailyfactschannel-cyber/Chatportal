@@ -1,17 +1,22 @@
 import { useEffect, useState } from 'react';
 import { ChatList } from './components/Sidebar/ChatList';
+import { ChatFolders, ChatFolder } from './components/Sidebar/ChatFolders';
+import { SidebarMenu } from './components/Sidebar/SidebarMenu';
 import { ChatView } from './components/Chat/ChatView';
 import { LoginScreen } from './components/LoginScreen';
 import { useAuthStore } from './stores/authStore';
 import { useChatStore } from './stores/chatStore';
-import { connectWebSocket } from './services/websocket';
+import { connectWebSocket, disconnectWebSocket } from './services/websocket';
+import { chatApi } from './services/api';
 import type { Chat } from './types';
 
 function App() {
-  const { isAuthenticated, user, logout } = useAuthStore();
-  const { setChats, chats } = useChatStore();
+  const { isAuthenticated, user } = useAuthStore();
+  const { setChats, setMessages, chats } = useChatStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const [sidebarMenuOpen, setSidebarMenuOpen] = useState(false);
+  const [activeFolder, setActiveFolder] = useState<ChatFolder>('all');
 
   useEffect(() => {
     if (theme === 'dark') {
@@ -25,108 +30,36 @@ function App() {
     if (isAuthenticated) {
       connectWebSocket();
       
-      const demoChats: Chat[] = [
-        {
-          id: '1',
-          type: 'private',
-          title: 'Иван Иванов',
-          avatarUrl: undefined,
-          lastMessage: {
-            id: 'm1',
-            chatId: '1',
-            senderId: '1',
-            content: 'Привет! Как дела?',
-            contentType: 'text',
-            timestamp: new Date(Date.now() - 1000 * 60 * 5).toISOString(),
-            status: 'read',
-          },
-          unreadCount: 2,
-          members: 2,
-          createdAt: new Date().toISOString(),
-        },
-        {
-          id: '2',
-          type: 'group',
-          title: 'Команда разработки',
-          lastMessage: {
-            id: 'm2',
-            chatId: '2',
-            senderId: '3',
-            content: 'Сегодня созвон в 15:00',
-            contentType: 'text',
-            timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-            status: 'read',
-          },
-          unreadCount: 5,
-          members: 8,
-          createdAt: new Date().toISOString(),
-        },
-        {
-          id: '3',
-          type: 'private',
-          title: 'Мария Петрова',
-          lastMessage: {
-            id: 'm3',
-            chatId: '3',
-            senderId: 'me',
-            content: 'Отправила документы',
-            contentType: 'text',
-            timestamp: new Date(Date.now() - 1000 * 60 * 60).toISOString(),
-            status: 'delivered',
-          },
-          unreadCount: 0,
-          members: 2,
-          createdAt: new Date().toISOString(),
-        },
-        {
-          id: '4',
-          type: 'channel',
-          title: 'Новости технологий',
-          lastMessage: {
-            id: 'm4',
-            chatId: '4',
-            senderId: 'system',
-            content: 'Новая версия Rust уже доступна',
-            contentType: 'text',
-            timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
-            status: 'read',
-          },
-          unreadCount: 12,
-          members: 1250,
-          createdAt: new Date().toISOString(),
-        },
-        {
-          id: '5',
-          type: 'group',
-          title: 'Друзья',
-          lastMessage: {
-            id: 'm5',
-            chatId: '5',
-            senderId: '4',
-            content: 'Встречаемся в субботу?',
-            contentType: 'text',
-            timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
-            status: 'read',
-          },
-          unreadCount: 0,
-          members: 6,
-          createdAt: new Date().toISOString(),
-        },
-      ];
-      
-      setChats(demoChats);
+      chatApi.getChats()
+        .then((data) => {
+          setChats(data);
+        })
+        .catch((err) => {
+          console.error('Failed to load chats:', err);
+        });
+    } else {
+      disconnectWebSocket();
     }
   }, [isAuthenticated, setChats]);
 
-  const filteredChats = chats.filter(chat => 
-    chat.title.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  useEffect(() => {
-    if (searchQuery) {
-      useChatStore.setState({ chats: filteredChats });
+  const filteredChats = chats.filter(chat => {
+    const matchesSearch = chat.title.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    if (!matchesSearch) return false;
+    
+    switch (activeFolder) {
+      case 'personal':
+        return chat.type === 'private';
+      case 'groups':
+        return chat.type === 'group';
+      case 'channels':
+        return chat.type === 'channel';
+      case 'unread':
+        return chat.unreadCount > 0;
+      default:
+        return true;
     }
-  }, [searchQuery, filteredChats]);
+  });
 
   if (!isAuthenticated) {
     return <LoginScreen />;
@@ -134,39 +67,36 @@ function App() {
 
   return (
     <div className="flex h-screen" style={{ backgroundColor: 'var(--chat-bg)' }}>
-      {/* Sidebar - как в Telegram */}
+      <SidebarMenu isOpen={sidebarMenuOpen} onClose={() => setSidebarMenuOpen(false)} />
+      
       <div 
-        className="w-[325px] flex flex-col"
+        className="flex"
         style={{ 
           backgroundColor: 'var(--sidebar-bg)',
           borderRight: '1px solid var(--sidebar-border)'
         }}
       >
-        {/* Header */}
+        <ChatFolders 
+          activeFolder={activeFolder} 
+          onFolderChange={setActiveFolder} 
+        />
+        
         <div 
-          className="h-[60px] flex items-center justify-between px-4"
-          style={{ borderBottom: '1px solid var(--header-border)' }}
+          className="w-[280px] flex flex-col"
+          style={{ borderRight: '1px solid var(--sidebar-border)' }}
         >
-          <div className="flex items-center gap-3">
-            {user && (
-              <div 
-                className="avatar avatar-md"
-                style={{ backgroundColor: 'var(--accent)' }}
-              >
-                {user.displayName.slice(0, 2).toUpperCase()}
-              </div>
-            )}
-          </div>
-          
-          <div className="flex items-center gap-1">
+          <div 
+            className="h-[60px] flex items-center justify-between px-3"
+            style={{ borderBottom: '1px solid var(--header-border)' }}
+          >
             <button
-              onClick={logout}
+              onClick={() => setSidebarMenuOpen(true)}
               className="p-2 rounded-full hover:bg-[var(--dialogs-bg-hover)] transition-colors"
-              title="Выйти"
-              style={{ color: 'var(--window-subfg)' }}
+              style={{ color: 'var(--window-fg)' }}
+              title="Меню"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
             
@@ -187,28 +117,30 @@ function App() {
               )}
             </button>
           </div>
+          
+          <div className="px-3 py-2">
+            <div 
+              className="flex items-center gap-2 px-3 py-2 rounded-lg"
+              style={{ backgroundColor: 'var(--compose-input-bg)' }}
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" style={{ color: 'var(--compose-icon)' }}>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <input
+                type="text"
+                placeholder="Поиск"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="flex-1 bg-transparent outline-none text-[14px]"
+                style={{ color: 'var(--window-fg)' }}
+              />
+            </div>
+          </div>
+          
+          <ChatList chats={filteredChats} />
         </div>
-        
-        {/* Search */}
-        <div className="px-4 py-2">
-          <input
-            type="text"
-            placeholder="Поиск"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full px-3 py-1.5 rounded-lg text-[14px] outline-none"
-            style={{ 
-              backgroundColor: 'var(--compose-input-bg)',
-              color: 'var(--window-fg)'
-            }}
-          />
-        </div>
-        
-        {/* Chat List */}
-        <ChatList />
       </div>
       
-      {/* Chat */}
       <ChatView />
     </div>
   );

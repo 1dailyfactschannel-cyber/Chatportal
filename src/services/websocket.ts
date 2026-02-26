@@ -1,6 +1,8 @@
 import { useChatStore } from '../stores/chatStore';
 import { useAuthStore } from '../stores/authStore';
 
+const WS_URL = import.meta.env.VITE_WS_URL || 'http://localhost:3001';
+
 let ws: WebSocket | null = null;
 let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
 
@@ -10,7 +12,7 @@ export const connectWebSocket = () => {
 
   if (ws?.readyState === WebSocket.OPEN) return;
 
-  const wsUrl = `ws://${window.location.host}/ws?token=${token}`;
+  const wsUrl = `${WS_URL}/ws?token=${token}`;
 
   try {
     ws = new WebSocket(wsUrl);

@@ -1,8 +1,13 @@
 import { ChatItem } from './ChatItem';
 import { useChatStore } from '../../stores/chatStore';
+import type { Chat } from '../../types';
 
-export const ChatList = () => {
-  const { chats, activeChat, setActiveChat } = useChatStore();
+interface ChatListProps {
+  chats: Chat[];
+}
+
+export const ChatList = ({ chats }: ChatListProps) => {
+  const { activeChat, setActiveChat } = useChatStore();
 
   if (chats.length === 0) {
     return (

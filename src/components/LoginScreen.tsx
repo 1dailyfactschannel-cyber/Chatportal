@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuthStore } from '../stores/authStore';
+import { authApi } from '../services/api';
 
 export const LoginScreen = () => {
   const [isRegister, setIsRegister] = useState(false);
@@ -7,6 +8,7 @@ export const LoginScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const { login } = useAuthStore();
 
   const handleDemoLogin = () => {
@@ -16,7 +18,7 @@ export const LoginScreen = () => {
     );
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     
@@ -30,8 +32,20 @@ export const LoginScreen = () => {
       return;
     }
 
-    // Для демо - просто входим
-    handleDemoLogin();
+    setLoading(true);
+    
+    try {
+      if (isRegister) {
+        const { user, token } = await authApi.register(username, email, password);
+        login(user, token);
+      } else {
+        const { user, token } = await authApi.login(username, password);
+        login(user, token);
+      }
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Ошибка соединения с сервером');
+      setLoading(false);
+    }
   };
 
   return (
@@ -88,9 +102,10 @@ export const LoginScreen = () => {
 
           <button
             type="submit"
-            className="w-full py-3 bg-[#0088cc] hover:bg-[#006699] text-white font-semibold rounded-lg transition-colors"
+            disabled={loading}
+            className="w-full py-3 bg-[#0088cc] hover:bg-[#006699] text-white font-semibold rounded-lg transition-colors disabled:opacity-50"
           >
-            {isRegister ? 'Зарегистрироваться' : 'Войти'}
+            {loading ? 'Загрузка...' : isRegister ? 'Зарегистрироваться' : 'Войти'}
           </button>
         </form>
 

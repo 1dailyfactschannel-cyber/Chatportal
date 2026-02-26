@@ -10,7 +10,11 @@ export const ChatView = () => {
     return (
       <div 
         className="flex-1 flex items-center justify-center"
-        style={{ backgroundColor: 'var(--chat-bg)' }}
+        style={{ 
+          backgroundColor: 'var(--chat-bg)',
+          backgroundImage: 'var(--chat-bg-pattern)',
+          backgroundRepeat: 'repeat'
+        }}
       >
         <div className="text-center">
           <div 
@@ -38,7 +42,11 @@ export const ChatView = () => {
   return (
     <div 
       className="flex-1 flex flex-col"
-      style={{ backgroundColor: 'var(--chat-bg)' }}
+      style={{ 
+        backgroundColor: 'var(--chat-bg)',
+        backgroundImage: 'var(--chat-bg-pattern)',
+        backgroundRepeat: 'repeat'
+      }}
     >
       <ChatHeader chat={activeChat} />
       <MessageList />
