@@ -11,13 +11,6 @@ export const LoginScreen = () => {
   const [loading, setLoading] = useState(false);
   const { login } = useAuthStore();
 
-  const handleDemoLogin = () => {
-    login(
-      { id: '1', username: 'demo', displayName: 'Demo User', createdAt: new Date().toISOString() },
-      'demo-token'
-    );
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -115,15 +108,6 @@ export const LoginScreen = () => {
             className="text-[#0088cc] hover:underline text-sm"
           >
             {isRegister ? 'Уже есть аккаунт? Войти' : 'Нет аккаунта? Регистрация'}
-          </button>
-        </div>
-
-        <div className="mt-8 pt-6 border-t border-[#e0e0e0] dark:border-[#2f3e50]">
-          <button
-            onClick={handleDemoLogin}
-            className="w-full py-2 border border-[#0088cc] text-[#0088cc] hover:bg-[#0088cc] hover:text-white font-semibold rounded-lg transition-colors"
-          >
-            Войти в демо режим
           </button>
         </div>
       </div>
