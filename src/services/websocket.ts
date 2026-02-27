@@ -1,7 +1,8 @@
 import { useChatStore } from '../stores/chatStore';
 import { useAuthStore } from '../stores/authStore';
 
-const WS_URL = import.meta.env.VITE_WS_URL || 'http://localhost:3001';
+const WS_URL = import.meta.env.VITE_WS_URL || 
+  (window.location.protocol === 'https:' ? 'wss://' + window.location.host + '/ws' : 'ws://' + window.location.host + '/ws');
 
 let ws: WebSocket | null = null;
 let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -24,6 +25,16 @@ const iceServers = {
   iceServers: [
     { urls: 'stun:stun.l.google.com:19302' },
     { urls: 'stun:stun1.l.google.com:19302' },
+    { 
+      urls: 'turn:openrelay.metered.ca:80', 
+      username: 'openrelay', 
+      credential: 'openrelay' 
+    },
+    { 
+      urls: 'turn:openrelay.metered.ca:443', 
+      username: 'openrelay', 
+      credential: 'openrelay' 
+    },
   ]
 };
 
